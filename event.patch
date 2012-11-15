@@ -1,0 +1,78 @@
+--- granite/garglk/event.c	2012-11-14 15:46:21.591206653 -0800
++++ granite/event.c	2012-11-14 16:28:20.151206653 -0800
+@@ -27,6 +27,8 @@
+ #include "glk.h"
+ #include "garglk.h"
+ 
++#define countof(x) (sizeof x / sizeof *x)
++
+ /* A pointer to the place where the pending glk_select() will store its
+    event. When not inside a glk_select() call, this will be NULL. */
+ event_t *gli_curevent = NULL;
+@@ -168,16 +170,55 @@
+ /* Handle a keystroke. */
+ void gli_input_handle_key(glui32 key)
+ {
++    window_t *win = gli_focuswin;
++    
+     if (gli_more_focus)
+     {
+         gli_input_more_focus();
+     }
+-
+     else
+     {
+         switch (key)
+         {
+             case keycode_Tab:
++                {
++                   	window_textbuffer_t *dwin = win->data;
++                   	int i, n, z;
++                   	
++                   	for (i=dwin->numchars; i>0; i--)
++                   	{
++                   		if (dwin->chars[i] == 0x20)
++                   			break;
++                   	}
++                   	
++                   	glui32 word[dwin->numchars-i];
++                   	
++                   	for (n=i; n<dwin->numchars; n++)
++                   		word[n-i] = dwin->chars[n];
++
++                    for (i=1; i<=dwin->scrollmax; i++)
++                    {
++                        for (n=dwin->lines[i].len; n>0; n--)
++                       	{
++                       		for (z=0; z<countof(word); z++)
++                       		{
++                       		    char c = dwin->lines[i].chars[n+z];
++                       		    if (c >= 'A' && c <= 'Z')
++                       		        c = c+32;
++
++                       		    if (c != (char)word[z])
++                       		        break;
++                       		        
++                       		    if (z == countof(word)-1)
++                       		        goto End;
++                       		}
++                       	}
++                    }
++                    End:
++                    
++                    for (n++; (char)dwin->lines[i].chars[n+z] != 0x20; n++)
++			            gcmd_buffer_accept_readline(win, dwin->lines[i].chars[n+z]);
++                }
+                 gli_input_next_focus();
+                 return;
+             case keycode_PageUp:
+@@ -191,9 +232,6 @@
+                 break;
+         }
+     }
+-
+-    window_t *win = gli_focuswin;
+-
+     if (!win)
+         return;
+ 
