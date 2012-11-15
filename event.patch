@@ -26,26 +26,32 @@
          {
              case keycode_Tab:
 +                {
-+                   	window_textbuffer_t *dwin = win->data;
-+                   	int i, n, z;
++                   window_textbuffer_t *dwin = win->data;
++                   int i, n, z;
++                   
++                   //Step backward to find last space on input line
++                   for (i=dwin->numchars; i>0; i--)
++                   {
++                   	if (dwin->chars[i] == 0x20)
++                   	    break;
++                   }
 +                   	
-+                   	for (i=dwin->numchars; i>0; i--)
-+                   	{
-+                   		if (dwin->chars[i] == 0x20)
-+                   			break;
-+                   	}
-+                   	
-+                   	glui32 word[dwin->numchars-i];
-+                   	
-+                   	for (n=i; n<dwin->numchars; n++)
-+                   		word[n-i] = dwin->chars[n];
++                   //Step forward to extract last word
++                   glui32 word[dwin->numchars-i];
 +
++                   for (n=i; n<dwin->numchars; n++)
++                   	word[n-i] = dwin->chars[n];
++
++                    //Loop through lines of prv output
 +                    for (i=1; i<=dwin->scrollmax; i++)
 +                    {
++                        //Step backwards through char of the line
 +                        for (n=dwin->lines[i].len; n>0; n--)
 +                       	{
++                                       //Step forward again, break if char doesn't match word
 +                       		for (z=0; z<countof(word); z++)
 +                       		{
++                                           //Convert to lowercase
 +                       		    char c = dwin->lines[i].chars[n+z];
 +                       		    if (c >= 'A' && c <= 'Z')
 +                       		        c = c+32;
@@ -54,12 +60,15 @@
 +                       		        break;
 +                       		        
 +                       		    if (z == countof(word)-1)
-+                       		        goto End;
++                       		        goto End; //Match found, break all three loops
 +                       		}
 +                       	}
 +                    }
 +                    End:
 +                    
++                    //Call input event for each char in tab complete
++                    // i is the line, n is the first char of match, z is length of match,
++                    // so n+z is end of match and start of tab complete
 +                    for (n++; (char)dwin->lines[i].chars[n+z] != 0x20; n++)
 +			            gcmd_buffer_accept_readline(win, dwin->lines[i].chars[n+z]);
 +                }
