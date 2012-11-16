@@ -9,9 +9,18 @@ that starts with what has been typed since the last space, then fill in the rest
 
 ## Install ##
 You will need to download the `gargoyle` source, apply the patches that interest you, then compile the modified source.
-Below are platform specific instructions. Most of the info below was pulled from the offical
+Below are platform specific instructions.
+
+### Windows ###
+Binaries are available for download from the *Downloads* tab. If you would like to patch and compile from source see
+the official
 [guide](https://code.google.com/p/garglk/wiki/Developers "Guide to compiling Gargoyle from source code.")
-for compiling `gargole`.
+for compiling `gargoyle`.
+
+### Mac ###
+I do not own a mac, so no binaries are available. For now see the official
+[guide](https://code.google.com/p/garglk/wiki/Developers "Guide to compiling Gargoyle from source code.")
+for compiling `gargoyle`.
 
 ### Ubuntu ###
 Although the below command are tailored for `ubuntu`, they should be similar for any linux ditro.
@@ -35,7 +44,7 @@ Apply the patches. Repeat replacing `event.patch` for as many patches as you wis
 
     patch -p1 < event.patch
     
-Compile the patched `gargoryle` source.
+Compile the patched `gargoyle` source.
 
     jam install
     cp garglk/garglk.ini build/dist
@@ -47,13 +56,3 @@ Run the compiled version of Gargoyle.
     ./gargoyle
     
 That's it, have fun.
-
-### Windows ###
-Comming soon. For now see the offical
-[guide](https://code.google.com/p/garglk/wiki/Developers "Guide to compiling Gargoyle from source code.")
-for compiling `gargole`.
-
-### Mac ###
-Comming soon. For now see the offical
-[guide](https://code.google.com/p/garglk/wiki/Developers "Guide to compiling Gargoyle from source code.")
-for compiling `gargole`.
