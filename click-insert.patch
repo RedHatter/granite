@@ -1,0 +1,81 @@
+*** gargoyle/garglk/draw.c	2011-07-13 09:22:26.000000000 -0700
+--- draw.c	2012-11-17 13:44:52.822310915 -0800
+***************
+*** 961,963 ****
+--- 961,1002 ----
+      }
+  }
+  
++ void get_word_at_coords(window_textbuffer_t *dwin, int sx, int sy)
++ {
++     //Divide y of event (inverted) by height of single line to get the line that was clicked
++     int ln = dwin->height-(sy-dwin->owner->bbox.y0 - gli_tmarginy)/gli_leading-1;
++ 
++     int i, nl, nr;
++     int x = 0;
++     bitmap_t *glyphs;
++     int adv;
++ 
++     //Compensate for margin
++     sx -= 2 * GLI_SUBPIX;
++ 
++     //Find char that was clicked - doesn't work well, often off
++     for (i=0; i<dwin->lines[ln].len; i++)
++     {
++      font_t *f = &gfont_table[attrfont(dwin->styles, &dwin->lines[ln].attrs[i])];
++      getglyph(f, dwin->lines[ln].chars[i], &adv, &glyphs);
++      x += adv/GLI_SUBPIX;
++      if (x >= sx)
++          break;
++     }
++ 
++     //Step backward to find prv space
++     for (nl=i-2; nl>=0; nl--)
++     {
++      if (dwin->lines[ln].chars[nl] == ' ')
++          break;
++     }
++ 
++     //Insert word onto input line
++     for (nr=++nl; nr<dwin->lines[ln].len; nr++)
++     {
++      gcmd_buffer_accept_readline(dwin->owner, dwin->lines[ln].chars[nr]);
++ 
++      if (dwin->lines[ln].chars[nr] == ' ')
++          break;
++     }
++ }
+*** gargoyle/garglk/wintext.c	2011-10-06 10:49:28.000000000 -0700
+--- wintext.c	2012-11-17 13:48:51.418310916 -0800
+***************
+*** 40,45 ****
+--- 40,48 ----
+  static glui32
+  put_picture(window_textbuffer_t *dwin, picture_t *pic, glui32 align, glui32 linkval);
+
++ time_t timer_prv;
++ time_t timer_double;
++ 
+  static void touch(window_textbuffer_t *dwin, int line)
+  {
+      window_t *win = dwin->owner;
+***************
+*** 1781,1786 ****
+--- 1784,1800 ----
+      window_t *win = dwin->owner;
+      int gh = FALSE;
+      int gs = FALSE;
++    
++     //Compare time with prv event time to detect double click, and compare against time
++     //two events ago to prevent double inserts
++     time_t timer;
++     time(&timer);
++ 
++     if (difftime(timer, timer_double) == 0.0 && difftime(timer, timer_prv) != 0.0)
++             get_word_at_coords(dwin, sx, sy);
++ 
++     timer_prv = timer_double;
++     timer_double = timer;
+  
+      if (win->line_request || win->char_request
+          || win->line_request_uni || win->char_request_uni

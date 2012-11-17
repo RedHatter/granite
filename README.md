@@ -3,9 +3,12 @@
 A set of patches to `Gargoyle` providing some additional features.
 
 ## Patches ##
-* **Tab Complete** - *event.patch, updated 11.14.2012*  
+* **Tab Complete** - *updated 11.14.2012*  
 Pressing tab will cause the program to search through previous story text and find the first word
 that starts with what has been typed since the last space, then fill in the rest of the word.
+
+* **Click to Insert** - *updated 11.17.2012*  
+Double clicking on a word will insert it onto the end of the input line.
 
 ## Install ##
 You will need to download the `gargoyle` source, apply the patches that interest you, then compile the modified source.
@@ -38,11 +41,11 @@ Install the dependences necessary to compile `gargoyle`.
 
 Download the `gargoyle` source.
 
-    svn co http://garglk.googlecode.com/svn/trunk/ ./
+    svn co http://garglk.googlecode.com/svn/trunk/ gargoyle
     
-Apply the patches. Repeat replacing `event.patch` for as many patches as you wish to apply.
+Apply the patches. Repeat replacing `file.patch` for as many patches as you wish to apply.
 
-    patch -p1 < event.patch
+    patch -p0 < file.patch
     
 Compile the patched `gargoyle` source.
 
