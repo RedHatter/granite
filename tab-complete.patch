@@ -1,5 +1,5 @@
-*** gargoyle/garglk/event.c	2012-11-14 21:18:54.148512653 -0800
---- event.c	2012-11-14 21:15:47.544512654 -0800
+*** gargoyle/garglk/event.c	2012-11-18 14:22:00.971295319 -0800
+--- event.c	2012-11-18 14:19:35.794114260 -0800
 ***************
 *** 27,32 ****
 --- 27,34 ----
@@ -29,7 +29,7 @@
                   gli_input_next_focus();
                   return;
               case keycode_PageUp:
---- 170,233 ----
+--- 170,245 ----
   /* Handle a keystroke. */
   void gli_input_handle_key(glui32 key)
   {
@@ -45,21 +45,27 @@
           {
               case keycode_Tab:
 +                 {
-+                    window_textbuffer_t *dwin = win->data;
-+                    int i, n, z;
++                     window_textbuffer_t *dwin = win->data;
++                     int i, n, z;
++                     char c;
 + 
-+                    //Step backward to find last space on input line
-+                    for (i=dwin->numchars; i>0; i--)
-+                    {
-+                    	if (dwin->chars[i] == 0x20)
-+                    	    break;
-+                    }
++                     //Step backward to find last space on input line
++                     for (i=dwin->numchars; i>0; i--)
++                     {
++                         //Convert to lowercase
++                         c = dwin->chars[i];
++                         if (c >= 'A' && c <= 'Z')
++                             c = c+32;
++ 
++                         if (dwin->chars[i] == 0x20)
++                     	       break;
++                     }
 +                    	
-+                    //Step forward to extract last word
-+                    glui32 word[dwin->numchars-i];
++                     //Step forward to extract last word
++                     glui32 word[dwin->numchars-i];
 + 
-+                    for (n=i; n<dwin->numchars; n++)
-+                    	word[n-i] = dwin->chars[n];
++                     for (n=i; n<dwin->numchars; n++)
++                     word[n-i] = dwin->chars[n];
 + 
 +                     //Loop through lines of prv output
 +                     for (i=1; i<=dwin->scrollmax; i++)
@@ -71,16 +77,16 @@
 +                        	    for (z=0; z<countof(word); z++)
 +                        	    {
 +                                 //Convert to lowercase
-+                        		    char c = dwin->lines[i].chars[n+z];
-+                        		    if (c >= 'A' && c <= 'Z')
-+                        		        c = c+32;
++                            	    c = dwin->lines[i].chars[n+z];
++                            	    if (c >= 'A' && c <= 'Z')
++                            	        c = c+32;
 + 
-+                        		    if (c != (char)word[z])
-+                        		        break;
-+                        		        
-+                        		    if (z == countof(word)-1)
-+                        		        goto End; //Match found, break all three loops
-+                        		}
++                            	    if (c != (char)word[z])
++                            	        break;
++                            		        
++                            	    if (z == countof(word)-1)
++                            	        goto End; //Match found, break all three loops
++                            	}
 +                        	}
 +                     }
 +                     End:
@@ -88,8 +94,14 @@
 +                     /* Call input event for each char in tab complete
 +                      i is the line, n is the first char of match, z is length of match,
 +                      so n+z is end of match and start of tab complete */
-+                     for (n++; (char)dwin->lines[i].chars[n+z] != 0x20; n++)
-+ 			            gcmd_buffer_accept_readline(win, dwin->lines[i].chars[n+z]);
++                     n++;
++                     while ((c  >= 'a' && c <= 'z') || (c  >= 'A' && c <= 'Z') || (c  >= '0' && c <= '9'))
++                     {
++                         gcmd_buffer_accept_readline(win, dwin->lines[i].chars[n+z]);
++                         n++;
++                         c = (char)dwin->lines[i].chars[n+z];
++                     }
++                     gcmd_buffer_accept_readline(win, ' ');
 +                 }
                   gli_input_next_focus();
                   return;
@@ -105,4 +117,4 @@
       if (!win)
           return;
   
---- 241,246 ----
+--- 253,258 ----

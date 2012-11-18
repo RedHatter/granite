@@ -3,11 +3,11 @@
 A set of patches to `Gargoyle` providing some additional features.
 
 ## Patches ##
-* **Tab Complete** - *updated 11.14.2012*  
+* **Tab Complete** - *updated 11.18.2012*  
 Pressing tab will cause the program to search through previous story text and find the first word
 that starts with what has been typed since the last space, then fill in the rest of the word.
 
-* **Click to Insert** - *updated 11.17.2012*  
+* **Click to Insert** - *updated 11.18.2012*  
 Double clicking on a word will insert it onto the end of the input line.
 
 ## Install ##

@@ -1,52 +1,5 @@
-*** gargoyle/garglk/draw.c	2011-07-13 09:22:26.000000000 -0700
---- draw.c	2012-11-17 13:44:52.822310915 -0800
-***************
-*** 961,963 ****
---- 961,1002 ----
-      }
-  }
-  
-+ void get_word_at_coords(window_textbuffer_t *dwin, int sx, int sy)
-+ {
-+     //Divide y of event (inverted) by height of single line to get the line that was clicked
-+     int ln = dwin->height-(sy-dwin->owner->bbox.y0 - gli_tmarginy)/gli_leading-1;
-+ 
-+     int i, nl, nr;
-+     int x = 0;
-+     bitmap_t *glyphs;
-+     int adv;
-+ 
-+     //Compensate for margin
-+     sx -= 2 * GLI_SUBPIX;
-+ 
-+     //Find char that was clicked - doesn't work well, often off
-+     for (i=0; i<dwin->lines[ln].len; i++)
-+     {
-+      font_t *f = &gfont_table[attrfont(dwin->styles, &dwin->lines[ln].attrs[i])];
-+      getglyph(f, dwin->lines[ln].chars[i], &adv, &glyphs);
-+      x += adv/GLI_SUBPIX;
-+      if (x >= sx)
-+          break;
-+     }
-+ 
-+     //Step backward to find prv space
-+     for (nl=i-2; nl>=0; nl--)
-+     {
-+      if (dwin->lines[ln].chars[nl] == ' ')
-+          break;
-+     }
-+ 
-+     //Insert word onto input line
-+     for (nr=++nl; nr<dwin->lines[ln].len; nr++)
-+     {
-+      gcmd_buffer_accept_readline(dwin->owner, dwin->lines[ln].chars[nr]);
-+ 
-+      if (dwin->lines[ln].chars[nr] == ' ')
-+          break;
-+     }
-+ }
-*** gargoyle/garglk/wintext.c	2011-10-06 10:49:28.000000000 -0700
---- wintext.c	2012-11-17 13:48:51.418310916 -0800
+*** gargoyle/garglk/wintext.c	2012-11-18 14:22:01.003295319 -0800
+--- wintext.c	2012-11-18 14:19:50.169297672 -0800
 ***************
 *** 24,29 ****
 --- 24,30 ----
@@ -56,23 +9,22 @@
 + #include <time.h>
   #include "glk.h"
   #include "garglk.h"
-
+  
 ***************
 *** 40,45 ****
---- 40,48 ----
+--- 41,49 ----
   static glui32
   put_picture(window_textbuffer_t *dwin, picture_t *pic, glui32 align, glui32 linkval);
-
+  
 + time_t timer_prv;
 + time_t timer_double;
 + 
   static void touch(window_textbuffer_t *dwin, int line)
   {
       window_t *win = dwin->owner;
-      
 ***************
-*** 1781,1786 ****
---- 1784,1800 ----
+*** 1786,1791 ****
+--- 1790,1848 ----
       window_t *win = dwin->owner;
       int gh = FALSE;
       int gs = FALSE;
@@ -83,7 +35,49 @@
 +     time(&timer);
 + 
 +     if (difftime(timer, timer_double) == 0.0 && difftime(timer, timer_prv) != 0.0)
-+             get_word_at_coords(dwin, sx, sy);
++     {
++         //Divide y of event (inverted) by height of single line to get the line that was clicked
++         int ln = dwin->height-(sy-dwin->owner->bbox.y0 - gli_tmarginy)/gli_leading-1;
++ 
++         int i, nl, nr;
++         int x = 0;
++         int adv;
++ 
++         //Compensate for margin
++         sx -= 2 * GLI_SUBPIX;
++ 
++         //Find char that was clicked
++         for (i=0; i<dwin->lines[ln].len; i++)
++         {
++             adv = gli_string_width_uni(attrfont(dwin->styles, &dwin->lines[ln].attrs[i]), &dwin->lines[ln].chars[i], 1, 7*GLI_SUBPIX);
++             adv = adv/GLI_SUBPIX;
++ 
++             if (x+adv >= sx)
++                 break;
++             else
++                x += adv;
++         }
++ 
++         //Step backward to find prv space
++         for (nl=i; nl>=0; nl--)
++         {
++             if (dwin->lines[ln].chars[nl] == ' ')
++                 break;
++         }
++ 
++         //Insert word onto input line
++         for (nr=++nl; nr<dwin->lines[ln].len; nr++)
++         {
++     	    glui32 c = dwin->lines[ln].chars[nr];
++ 
++             if (!((c  >= 'a' && c <= 'z') || (c  >= 'A' && c <= 'Z') || (c  >= '0' && c <= '9')))
++                 break;
++ 	        
++             gcmd_buffer_accept_readline(dwin->owner, c);
++         }
++         
++         gcmd_buffer_accept_readline(dwin->owner, ' ');
++     }
 + 
 +     timer_prv = timer_double;
 +     timer_double = timer;
