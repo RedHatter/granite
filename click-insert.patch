@@ -48,6 +48,16 @@
 *** gargoyle/garglk/wintext.c	2011-10-06 10:49:28.000000000 -0700
 --- wintext.c	2012-11-17 13:48:51.418310916 -0800
 ***************
+*** 24,29 ****
+--- 24,30 ----
+  #include <stdio.h>
+  #include <stdlib.h>
+  #include <string.h>
++ #include <time.h>
+  #include "glk.h"
+  #include "garglk.h"
+
+***************
 *** 40,45 ****
 --- 40,48 ----
   static glui32
@@ -59,6 +69,7 @@
   static void touch(window_textbuffer_t *dwin, int line)
   {
       window_t *win = dwin->owner;
+      
 ***************
 *** 1781,1786 ****
 --- 1784,1800 ----
