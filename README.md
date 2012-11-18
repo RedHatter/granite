@@ -8,7 +8,8 @@ Pressing tab will cause the program to search through previous story text and fi
 that starts with what has been typed since the last space, then fill in the rest of the word.
 
 * **Click to Insert** - *updated 11.17.2012*  
-Double clicking on a word will insert it onto the end of the input line.
+Double clicking on a word will insert it onto the end of the input line.  
+Thank you **George** from [intfiction.org](http://intfiction.org "The Interactive Fiction Community Forum") for the suggestion.
 
 ## Install ##
 You will need to download the `gargoyle` source, apply the patches that interest you, then compile the modified source.
