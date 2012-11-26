@@ -1,5 +1,26 @@
-*** original/garglk/wintext.c	2012-11-25 20:32:49.531171268 -0800
---- gargoyle/garglk/wintext.c	2012-11-25 20:34:47.087166458 -0800
+diff -cr original/garglk/event.c gargoyle/garglk/event.c
+*** original/garglk/event.c	2012-11-25 21:11:04.736796127 -0800
+--- gargoyle/garglk/event.c	2012-11-25 21:15:37.016784986 -0800
+***************
+*** 179,185 ****
+          {
+              case keycode_Tab:
+                  gli_input_next_focus();
+!                 return;
+              case keycode_PageUp:
+              case keycode_PageDown:
+              case keycode_MouseWheelUp:
+--- 179,185 ----
+          {
+              case keycode_Tab:
+                  gli_input_next_focus();
+!                 break;
+              case keycode_PageUp:
+              case keycode_PageDown:
+              case keycode_MouseWheelUp:
+diff -cr original/garglk/wintext.c gargoyle/garglk/wintext.c
+*** original/garglk/wintext.c	2012-11-25 21:11:04.764796126 -0800
+--- gargoyle/garglk/wintext.c	2012-11-25 21:09:25.056800206 -0800
 ***************
 *** 30,35 ****
 --- 30,37 ----
