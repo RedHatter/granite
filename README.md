@@ -26,7 +26,7 @@ I do not own a mac, so no binaries are available. For now see the official
 [guide](https://code.google.com/p/garglk/wiki/Developers "Guide to compiling Gargoyle from source code.")
 for compiling `gargoyle`.
 
-### Ubuntu ###
+### Linux ###
 Although the below command are tailored for `ubuntu`, they should be similar for any linux ditro.
 
 Download the `granite` source and enter the directory. Alternatively you could download the source as a zip by clicking
@@ -50,6 +50,7 @@ Apply the patches. Repeat replacing `file.patch` for as many patches as you wish
     
 Compile the patched `gargoyle` source.
 
+    cd gargoyle
     jam install
     cp garglk/garglk.ini build/dist
     
