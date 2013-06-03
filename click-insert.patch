@@ -1,5 +1,5 @@
-*** gargoyle/garglk/wintext.c	2012-11-18 14:22:01.003295319 -0800
---- wintext.c	2012-11-18 14:19:50.169297672 -0800
+*** original/garglk/wintext.c	2013-06-02 16:55:23.447146000 -0700
+--- gargoyle/garglk/wintext.c	2013-06-02 16:58:28.275146000 -0700
 ***************
 *** 24,29 ****
 --- 24,30 ----
@@ -23,8 +23,8 @@
   {
       window_t *win = dwin->owner;
 ***************
-*** 1786,1791 ****
---- 1790,1848 ----
+*** 1776,1781 ****
+--- 1780,1836 ----
       window_t *win = dwin->owner;
       int gh = FALSE;
       int gs = FALSE;
@@ -36,39 +36,37 @@
 + 
 +     if (difftime(timer, timer_double) == 0.0 && difftime(timer, timer_prv) != 0.0)
 +     {
-+         //Divide y of event (inverted) by height of single line to get the line that was clicked
-+         int ln = dwin->height-(sy-dwin->owner->bbox.y0 - gli_tmarginy)/gli_leading-1;
++         // Divide y of event (inverted) by height of single line to get the line that was clicked
++         tbline_t *ln = &dwin->lines[dwin->height-(sy-dwin->owner->bbox.y0 - gli_tmarginy)/gli_leading-1];
 + 
 +         int i, nl, nr;
 +         int x = 0;
 +         int adv;
 + 
-+         //Compensate for margin
-+         sx -= 2 * GLI_SUBPIX;
-+ 
-+         //Find char that was clicked
-+         for (i=0; i<dwin->lines[ln].len; i++)
++         int x0, tx, tsc, tsw;
++         x0 = (win->bbox.x0 + gli_tmarginx) * GLI_SUBPIX;
++         tx = (x0 + SLOP + ln->lm)/GLI_SUBPIX;
++         // Measure string widths until we find the clicked char
++         for (tsc = 0; tsc < ln->len; tsc++)
 +         {
-+             adv = gli_string_width_uni(attrfont(dwin->styles, &dwin->lines[ln].attrs[i]), &dwin->lines[ln].chars[i], 1, 7*GLI_SUBPIX);
-+             adv = adv/GLI_SUBPIX;
-+ 
-+             if (x+adv >= sx)
++             tsw = calcwidth(dwin, ln->chars, ln->attrs, 0, tsc, -1)/GLI_SUBPIX;
++             if (tsw + tx >= sx || tsw + tx + GLI_SUBPIX >= sx && ln->chars[tsc] != ' ')
++             {
 +                 break;
-+             else
-+                x += adv;
++             }
 +         }
 + 
-+         //Step backward to find prv space
-+         for (nl=i; nl>=0; nl--)
++         // Step backward to find prv space
++         for (nl=tsc; nl>=0; nl--)
 +         {
-+             if (dwin->lines[ln].chars[nl] == ' ')
++             if (ln->chars[nl] == ' ')
 +                 break;
 +         }
 + 
-+         //Insert word onto input line
-+         for (nr=++nl; nr<dwin->lines[ln].len; nr++)
++         // Insert word onto input line
++         for (nr=++nl; nr<ln->len; nr++)
 +         {
-+     	    glui32 c = dwin->lines[ln].chars[nr];
++     	    glui32 c = ln->chars[nr];
 + 
 +             if (!((c  >= 'a' && c <= 'z') || (c  >= 'A' && c <= 'Z') || (c  >= '0' && c <= '9')))
 +                 break;
