@@ -1,0 +1,239 @@
+*** original/garglk/wintext.c	2013-06-03 14:17:16.343753887 -0700
+--- gargoyle/garglk/wintext.c	2013-06-03 17:04:43.591753887 -0700
+***************
+*** 30,35 ****
+--- 30,37 ----
+  #define MIN(a,b) (a < b ? a : b)
+  #define MAX(a,b) (a > b ? a : b)
+  
++ #define countof(x) (sizeof x / sizeof *x)
++ 
+  /* how many pixels we add to left/right margins */
+  #define SLOP (2 * GLI_SUBPIX)
+  
+***************
+*** 40,45 ****
+--- 42,49 ----
+  static glui32
+  put_picture(window_textbuffer_t *dwin, picture_t *pic, glui32 align, glui32 linkval);
+  
++ int stc, etc = 0;
++ 
+  static void touch(window_textbuffer_t *dwin, int line)
+  {
+      window_t *win = dwin->owner;
+***************
+*** 1618,1623 ****
+--- 1622,1629 ----
+              cx = dwin->history[dwin->historypos];
+              put_text_uni(dwin, cx, cx ? strlen_uni(cx) : 0, dwin->infence,
+                      dwin->numchars - dwin->infence);
++             etc = 0;
++             stc = 0;
+              break;
+  
+          case keycode_Down:
+***************
+*** 1629,1634 ****
+--- 1635,1642 ----
+              cx = dwin->history[dwin->historypos];
+              put_text_uni(dwin, cx, cx ? strlen_uni(cx) : 0, dwin->infence, 
+                      dwin->numchars - dwin->infence);
++             etc = 0;
++             stc = 0;
+              break;
+  
+              /* Cursor movement keys, during line input. */
+***************
+*** 1637,1660 ****
+--- 1645,1680 ----
+              if (dwin->incurs <= dwin->infence)
+                  return;
+              dwin->incurs--;
++             if (etc-stc != 0)
++                 put_text_uni(dwin, NULL, 0, stc, etc-stc);
++             etc = 0;
++             stc = 0;
+              break;
+  
+          case keycode_Right:
+              if (dwin->incurs >= dwin->numchars)
+                  return;
+              dwin->incurs++;
++             etc = 0;
++             stc = 0;
+              break;
+  
+          case keycode_Home:
+              if (dwin->incurs <= dwin->infence)
+                  return;
+              dwin->incurs = dwin->infence;
++             if (etc-stc != 0)
++                 put_text_uni(dwin, NULL, 0, stc, etc-stc);
++             etc = 0;
++             stc = 0;
+              break;
+  
+          case keycode_End:
+              if (dwin->incurs >= dwin->numchars)
+                  return;
+              dwin->incurs = dwin->numchars;
++             etc = 0;
++             stc = 0;
+              break;
+  
+              /* Delete keys, during line input. */
+***************
+*** 1662,1695 ****
+          case keycode_Delete:
+              if (dwin->incurs <= dwin->infence)
+                  return;
+!             put_text_uni(dwin, NULL, 0, dwin->incurs-1, 1);
+              break;
+  
+          case keycode_Erase:
+              if (dwin->incurs >= dwin->numchars)
+                  return;
+!             put_text_uni(dwin, NULL, 0, dwin->incurs, 1);
+              break;
+  
+          case keycode_Escape:
+              if (dwin->infence >= dwin->numchars)
+                  return;
+              put_text_uni(dwin, NULL, 0, dwin->infence, dwin->numchars - dwin->infence);
+              break;
+  
+              /* Regular keys */
+  
+          case keycode_Return:
+              acceptline(win, arg);
+              break;
+  
+          default:
+              if (arg >= 32 && arg <= 0x10FFFF)
+              {
+                  if (gli_conf_caps && (arg > 0x60 && arg < 0x7b))
+                      arg -= 0x20;
+                  put_text_uni(dwin, &arg, 1, dwin->incurs, 0);
+              }
+              break;
+      }
+  
+--- 1682,1798 ----
+          case keycode_Delete:
+              if (dwin->incurs <= dwin->infence)
+                  return;
+!             if (etc-stc != 0)
+!                 put_text_uni(dwin, NULL, 0, stc-1, etc-stc+1);
+!             else
+!                 put_text_uni(dwin, NULL, 0, dwin->incurs, 1);
+!             etc = 0;
+!             stc = 0;
+              break;
+  
+          case keycode_Erase:
+              if (dwin->incurs >= dwin->numchars)
+                  return;
+!             if (etc-stc != 0)
+!                 put_text_uni(dwin, NULL, 0, stc, etc-stc);
+!             else
+!                 put_text_uni(dwin, NULL, 0, dwin->incurs-1, 1);
+!             etc = 0;
+!             stc = 0;
+              break;
+  
+          case keycode_Escape:
+              if (dwin->infence >= dwin->numchars)
+                  return;
+              put_text_uni(dwin, NULL, 0, dwin->infence, dwin->numchars - dwin->infence);
++             etc = 0;
++             stc = 0;
+              break;
+  
+              /* Regular keys */
+  
+          case keycode_Return:
+              acceptline(win, arg);
++             etc = 0;
++             stc = 0;
+              break;
+  
+          default:
+              if (arg >= 32 && arg <= 0x10FFFF)
+              {
++                 if (etc-stc != 0)
++                     put_text_uni(dwin, NULL, 0, stc, etc-stc);
++ 
+                  if (gli_conf_caps && (arg > 0x60 && arg < 0x7b))
+                      arg -= 0x20;
+                  put_text_uni(dwin, &arg, 1, dwin->incurs, 0);
++ 
++                 int i, n, z;
++                 char c;
++ 
++                 // Step backward to find last space on input line
++                 for (i=dwin->incurs-1; i>0; i--)
++                 {
++                     // Convert to lowercase
++                     c = dwin->chars[i];
++                     if (c >= 'A' && c <= 'Z')
++                         c = c+32;
++ 
++                     if (dwin->chars[i] == 0x20)
++                 	       break;
++                 }
++                	
++                 // Step forward to extract last word
++                 glui32 word[dwin->incurs-i-1];
++ 
++                 for (n=i; n<dwin->incurs; n++)
++                     word[n-i] = dwin->chars[n];
++ 
++                 // Loop through lines of prv output
++                 for (i=1; i<=dwin->scrollmax; i++)
++                 {
++                     // Step backwards through char of the line
++                     for (n=dwin->lines[i].len; n>=0; n--)
++                    	{
++                         // Step forward again, break if char doesn't match word
++                    	    for (z=0; z<=countof(word); z++)
++                    	    {
++                             // Convert to lowercase
++                        	    c = dwin->lines[i].chars[n+z];
++                        	    if (c >= 'A' && c <= 'Z')
++                        	        c = c+32;
++ 
++                             // Compinsate for no space before first char in line
++                             int g = (n==0) ? z+1 : z;
++ 
++                        	    if (c != (char)word[g])
++                        	        break;
++                        		        
++                        	    if (g == countof(word))
++                        	        goto End;   //  Match found, break all three loops
++                         }
++                    	}
++                 }
++                 End:
++                 
++                 /* Call input event for each char in tab complete
++                    i is the line, n is the first char of match, z is length of match,
++                    so n+z is end of match and start of tab complete */
++                 n += 1;
++                 stc = dwin->incurs;
++                 c = (char)dwin->lines[i].chars[n+z];
++                 while ((c  >= 'a' && c <= 'z') || (c  >= 'A' && c <= 'Z') || (c  >= '0' && c <= '9'))
++                 {
++                     put_text_uni(dwin, &dwin->lines[i].chars[n+z], 1, dwin->incurs, 0);
++                     n++;
++                     c = (char)dwin->lines[i].chars[n+z];
++                 }
++                 etc = dwin->incurs;
++ 
++                 // Move curser to beginning of insert
++                 dwin->incurs = stc;
+              }
++ 
+              break;
+      }
+  

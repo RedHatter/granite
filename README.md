@@ -3,8 +3,13 @@
 A set of patches to `Gargoyle` providing some additional features.
 
 ## Patches ##
+* **Auto Complete** - *updated 06.03.2013*  
+Attempts to guess what you are typing by searching through output for last word to begin with what you have typed so far.
+Similar to *Tab Complete*.
+
 * **Tab Complete** - *updated 11.25.2012*  
-Pressing tab will cause the program to search through previous story text and find the first word
+Note: not compatible with *Auto Complete*.
+Pressing tab will cause the program to search through previous story text and find the last word
 that starts with what has been typed since the last space, then fill in the rest of the word.
 
 * **Click to Insert** - *updated 06.02.2013*  
