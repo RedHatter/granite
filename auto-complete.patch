@@ -1,5 +1,5 @@
-*** original/garglk/wintext.c	2013-06-03 18:55:13.223753887 -0700
---- gargoyle/garglk/wintext.c	2013-06-03 18:57:16.767753887 -0700
+*** original/garglk/wintext.c	2013-06-04 14:20:14.660699083 -0700
+--- gargoyle/garglk/wintext.c	2013-06-04 14:43:14.472642623 -0700
 ***************
 *** 30,35 ****
 --- 30,37 ----
@@ -84,65 +84,21 @@
   
               /* Delete keys, during line input. */
 ***************
-*** 1662,1695 ****
-          case keycode_Delete:
+*** 1663,1695 ****
+--- 1683,1792 ----
               if (dwin->incurs <= dwin->infence)
                   return;
-!             put_text_uni(dwin, NULL, 0, dwin->incurs-1, 1);
+              put_text_uni(dwin, NULL, 0, dwin->incurs-1, 1);
++             etc = 0;
++             stc = 0;
               break;
   
           case keycode_Erase:
               if (dwin->incurs >= dwin->numchars)
                   return;
-!             put_text_uni(dwin, NULL, 0, dwin->incurs, 1);
-              break;
-  
-          case keycode_Escape:
-              if (dwin->infence >= dwin->numchars)
-                  return;
-              put_text_uni(dwin, NULL, 0, dwin->infence, dwin->numchars - dwin->infence);
-              break;
-  
-              /* Regular keys */
-  
-          case keycode_Return:
-              acceptline(win, arg);
-              break;
-  
-          default:
-              if (arg >= 32 && arg <= 0x10FFFF)
-              {
-                  if (gli_conf_caps && (arg > 0x60 && arg < 0x7b))
-                      arg -= 0x20;
-                  put_text_uni(dwin, &arg, 1, dwin->incurs, 0);
-              }
-              break;
-      }
-  
---- 1682,1801 ----
-          case keycode_Delete:
-              if (dwin->incurs <= dwin->infence)
-                  return;
-!             if (etc-stc != 0)
-!                 put_text_uni(dwin, NULL, 0, stc-1, etc-stc+1);
-!             else
-!             {
-!                 put_text_uni(dwin, NULL, 0, dwin->incurs, 1);
-!                 dwin->incurs -= 1;
-!             }
-!             etc = 0;
-!             stc = 0;
-              break;
-  
-          case keycode_Erase:
-              if (dwin->incurs >= dwin->numchars)
-                  return;
-!             if (etc-stc != 0)
-!                 put_text_uni(dwin, NULL, 0, stc, etc-stc);
-!             else
-!                 put_text_uni(dwin, NULL, 0, dwin->incurs-1, 1);
-!             etc = 0;
-!             stc = 0;
+              put_text_uni(dwin, NULL, 0, dwin->incurs, 1);
++             etc = 0;
++             stc = 0;
               break;
   
           case keycode_Escape:
