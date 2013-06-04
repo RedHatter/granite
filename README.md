@@ -8,7 +8,7 @@ Attempts to guess what you are typing by searching through output for last word 
 Similar to *Tab Complete*.
 
 * **Tab Complete** - *updated 11.25.2012*  
-Note: not compatible with *Auto Complete*.
+Note: not compatible with *Auto Complete*.  
 Pressing tab will cause the program to search through previous story text and find the last word
 that starts with what has been typed since the last space, then fill in the rest of the word.
 
