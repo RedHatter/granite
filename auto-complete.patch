@@ -1,5 +1,5 @@
-*** original/garglk/wintext.c	2013-06-03 14:17:16.343753887 -0700
---- gargoyle/garglk/wintext.c	2013-06-03 17:04:43.591753887 -0700
+*** original/garglk/wintext.c	2013-06-03 18:55:13.223753887 -0700
+--- gargoyle/garglk/wintext.c	2013-06-03 18:57:16.767753887 -0700
 ***************
 *** 30,35 ****
 --- 30,37 ----
@@ -119,14 +119,17 @@
               break;
       }
   
---- 1682,1798 ----
+--- 1682,1801 ----
           case keycode_Delete:
               if (dwin->incurs <= dwin->infence)
                   return;
 !             if (etc-stc != 0)
 !                 put_text_uni(dwin, NULL, 0, stc-1, etc-stc+1);
 !             else
+!             {
 !                 put_text_uni(dwin, NULL, 0, dwin->incurs, 1);
+!                 dwin->incurs -= 1;
+!             }
 !             etc = 0;
 !             stc = 0;
               break;
