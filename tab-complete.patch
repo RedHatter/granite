@@ -1,6 +1,6 @@
 diff -cr original/garglk/event.c gargoyle/garglk/event.c
-*** original/garglk/event.c	2012-11-25 21:11:04.736796127 -0800
---- gargoyle/garglk/event.c	2012-11-25 21:15:37.016784986 -0800
+*** original/garglk/event.c	2013-06-07 12:11:43.276496020 -0700
+--- gargoyle/garglk/event.c	2013-06-07 12:03:36.120515954 -0700
 ***************
 *** 179,185 ****
           {
@@ -19,8 +19,8 @@ diff -cr original/garglk/event.c gargoyle/garglk/event.c
               case keycode_PageDown:
               case keycode_MouseWheelUp:
 diff -cr original/garglk/wintext.c gargoyle/garglk/wintext.c
-*** original/garglk/wintext.c	2012-11-25 21:11:04.764796126 -0800
---- gargoyle/garglk/wintext.c	2012-11-25 21:09:25.056800206 -0800
+*** original/garglk/wintext.c	2013-06-07 12:11:43.308496019 -0700
+--- gargoyle/garglk/wintext.c	2013-06-07 12:16:45.712483645 -0700
 ***************
 *** 30,35 ****
 --- 30,37 ----
@@ -33,71 +33,78 @@ diff -cr original/garglk/wintext.c gargoyle/garglk/wintext.c
   #define SLOP (2 * GLI_SUBPIX)
   
 ***************
-*** 1688,1693 ****
---- 1690,1757 ----
+*** 1678,1683 ****
+--- 1680,1754 ----
               break;
   
               /* Regular keys */
 +             
 +         case keycode_Tab:
 +             {
-+                 int i, n, z;
-+                 char c;
-+ 
-+                 //Step backward to find last space on input line
-+                 for (i=dwin->incurs-1; i>0; i--)
++                 // Do not auto complete in the middle of a word
++                 if (dwin->incurs == dwin->numchars || dwin->chars[dwin->incurs] == ' ')
 +                 {
-+                     //Convert to lowercase
-+                     c = dwin->chars[i];
-+                     if (c >= 'A' && c <= 'Z')
-+                         c = c+32;
++                     int i, n, z;
++                     char c;
 + 
-+                     if (dwin->chars[i] == 0x20)
-+                 	       break;
++                     // Step backward to find last space on input line
++                     for (i=dwin->incurs-1; i>0; i--)
++                     {
++                         //Convert to lowercase
++                         c = dwin->chars[i];
++                         if (c >= 'A' && c <= 'Z')
++                             c = c+32;
++ 
++                         if (dwin->chars[i] == 0x20)
++                     	       break;
++                     }
++                    	
++                     // Step forward to extract last word
++                     glui32 word[dwin->incurs-i-1];
++ 
++                     for (n=i; n<dwin->incurs; n++)
++                         word[n-i] = dwin->chars[n];
++ 
++                     // Loop through lines of prv output
++                     for (i=1; i<=dwin->scrollmax; i++)
++                     {
++                         // Step backwards through char of the line
++                         for (n=dwin->lines[i].len; n>=0; n--)
++                         {
++                             // Step forward again, break if char doesn't match word
++                             for (z=0; z<=countof(word); z++)
++                             {
++                                 // Convert to lowercase
++                                 c = dwin->lines[i].chars[n+z];
++                                 if (c >= 'A' && c <= 'Z')
++                            	        c = c+32;
++ 
++                                 // Compensate for no space before first char in line
++                                 int g = (n==0) ? z+1 : z;
++ 
++                                 if (c != (char)word[g])
++                                     break;
++                            		        
++                                 if (g == countof(word))
++                                     goto End; // Match found, break all three loops
++                             }
++                         }
++                     }
++                     End:
++                     
++                     /* Call input event for each char in tab complete
++                        i is the line, n is the first char of match, z is length of match,
++                        so n+z is end of match and start of tab complete */
++                     n += 1;
++                     while ((c  >= 'a' && c <= 'z') || (c  >= 'A' && c <= 'Z') || (c  >= '0' && c <= '9'))
++                     {
++                         put_text_uni(dwin, &dwin->lines[i].chars[n+z], 1, dwin->incurs, 0);
++                         n++;
++                         c = (char)dwin->lines[i].chars[n+z];
++                     }
++                     glui32 space = 0x20;
++                     put_text_uni(dwin, &space, 1, dwin->incurs, 0);
 +                 }
-+                	
-+                 //Step forward to extract last word
-+                 glui32 word[dwin->incurs-i-1];
-+ 
-+                 for (n=i; n<dwin->incurs-1; n++)
-+                     word[n-i] = dwin->chars[n];
-+ 
-+                 //Loop through lines of prv output
-+                 for (i=1; i<=dwin->scrollmax; i++)
-+                 {
-+                     //Step backwards through char of the line
-+                     for (n=dwin->lines[i].len; n>0; n--)
-+                    	{
-+                         //Step forward again, break if char doesn't match word
-+                    	    for (z=0; z<countof(word); z++)
-+                    	    {
-+                             //Convert to lowercase
-+                        	    c = dwin->lines[i].chars[n+z];
-+                        	    if (c >= 'A' && c <= 'Z')
-+                        	        c = c+32;
-+ 
-+                        	    if (c != (char)word[z])
-+                        	        break;
-+                        		        
-+                        	    if (z == countof(word)-1)
-+                        	        goto End; //Match found, break all three loops
-+                        	}
-+                    	}
-+                 }
-+                 End:
-+                 
-+                 /* Call input event for each char in tab complete
-+                  i is the line, n is the first char of match, z is length of match,
-+                  so n+z is end of match and start of tab complete */
-+                 n += 2;
-+                 while ((c  >= 'a' && c <= 'z') || (c  >= 'A' && c <= 'Z') || (c  >= '0' && c <= '9'))
-+                 {
-+                     put_text_uni(dwin, &dwin->lines[i].chars[n+z], 1, dwin->incurs, 0);
-+                     n++;
-+                     c = (char)dwin->lines[i].chars[n+z];
-+                 }
-+                 glui32 space = 0x20;
-+                 put_text_uni(dwin, &space, 1, dwin->incurs, 0);
 +             }
 +             break;
   

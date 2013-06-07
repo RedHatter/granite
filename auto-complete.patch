@@ -227,7 +227,7 @@
 +                            	    if (c >= 'A' && c <= 'Z')
 +                            	        c = c+32;
 + 
-+                                 // Compinsate for no space before first char in line
++                                 // Compensate for no space before first char in line
 +                                 int g = (n==0) ? z+1 : z;
 + 
 +                            	    if (c != (char)word[g])
