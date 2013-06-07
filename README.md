@@ -3,7 +3,7 @@
 A set of patches to `Gargoyle` providing some additional features.
 
 ## Patches ##
-* **Auto Complete** - *updated 06.03.2013*  
+* **Auto Complete** - *updated 06.07.2013*  
 Attempts to guess what you are typing by searching through output for last word to begin with what you have typed so far.
 Similar to *Tab Complete*.
 
