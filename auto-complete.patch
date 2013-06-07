@@ -1,5 +1,5 @@
-*** original/garglk/wintext.c	2013-06-04 14:20:14.660699083 -0700
---- gargoyle/garglk/wintext.c	2013-06-04 14:43:14.472642623 -0700
+*** original/garglk/wintext.c	2013-06-07 11:42:16.424568317 -0700
+--- gargoyle/garglk/wintext.c	2013-06-07 11:40:49.168571887 -0700
 ***************
 *** 30,35 ****
 --- 30,37 ----
@@ -45,8 +45,66 @@
   
               /* Cursor movement keys, during line input. */
 ***************
-*** 1637,1660 ****
---- 1645,1680 ----
+*** 1637,1694 ****
+              if (dwin->incurs <= dwin->infence)
+                  return;
+              dwin->incurs--;
+              break;
+  
+          case keycode_Right:
+              if (dwin->incurs >= dwin->numchars)
+                  return;
+              dwin->incurs++;
+              break;
+  
+          case keycode_Home:
+              if (dwin->incurs <= dwin->infence)
+                  return;
+              dwin->incurs = dwin->infence;
+              break;
+  
+          case keycode_End:
+              if (dwin->incurs >= dwin->numchars)
+                  return;
+              dwin->incurs = dwin->numchars;
+              break;
+  
+              /* Delete keys, during line input. */
+  
+!         case keycode_Delete:
+              if (dwin->incurs <= dwin->infence)
+                  return;
+              put_text_uni(dwin, NULL, 0, dwin->incurs-1, 1);
+              break;
+  
+!         case keycode_Erase:
+              if (dwin->incurs >= dwin->numchars)
+                  return;
+!             put_text_uni(dwin, NULL, 0, dwin->incurs, 1);
+              break;
+  
+          case keycode_Escape:
+              if (dwin->infence >= dwin->numchars)
+                  return;
+              put_text_uni(dwin, NULL, 0, dwin->infence, dwin->numchars - dwin->infence);
+              break;
+  
+              /* Regular keys */
+  
+          case keycode_Return:
+              acceptline(win, arg);
+              break;
+  
+          default:
+              if (arg >= 32 && arg <= 0x10FFFF)
+              {
+                  if (gli_conf_caps && (arg > 0x60 && arg < 0x7b))
+                      arg -= 0x20;
+                  put_text_uni(dwin, &arg, 1, dwin->incurs, 0);
+              }
+              break;
+      }
+--- 1645,1799 ----
               if (dwin->incurs <= dwin->infence)
                   return;
               dwin->incurs--;
@@ -83,22 +141,26 @@
               break;
   
               /* Delete keys, during line input. */
-***************
-*** 1663,1695 ****
---- 1683,1792 ----
+  
+!         case keycode_Delete: // Backspace
               if (dwin->incurs <= dwin->infence)
                   return;
++             if (etc-stc != 0)
++                 put_text_uni(dwin, NULL, 0, stc, etc-stc);
               put_text_uni(dwin, NULL, 0, dwin->incurs-1, 1);
 +             etc = 0;
 +             stc = 0;
               break;
   
-          case keycode_Erase:
+!         case keycode_Erase: // Delete
               if (dwin->incurs >= dwin->numchars)
                   return;
-              put_text_uni(dwin, NULL, 0, dwin->incurs, 1);
-+             etc = 0;
-+             stc = 0;
+!             if (etc-stc != 0)
+!                 put_text_uni(dwin, NULL, 0, stc, etc-stc);
+!             else
+!                 put_text_uni(dwin, NULL, 0, dwin->incurs, 1);
+!             etc = 0;
+!             stc = 0;
               break;
   
           case keycode_Escape:
@@ -127,72 +189,74 @@
                       arg -= 0x20;
                   put_text_uni(dwin, &arg, 1, dwin->incurs, 0);
 + 
-+                 int i, n, z;
-+                 char c;
-+ 
-+                 // Step backward to find last space on input line
-+                 for (i=dwin->incurs-1; i>0; i--)
++                 // Do not auto complete in the middle of a word
++                 if (dwin->incurs == dwin->numchars || dwin->chars[dwin->incurs] == ' ')
 +                 {
-+                     // Convert to lowercase
-+                     c = dwin->chars[i];
-+                     if (c >= 'A' && c <= 'Z')
-+                         c = c+32;
++                     int i, n, z;
++                     char c;
 + 
-+                     if (dwin->chars[i] == 0x20)
-+                 	       break;
-+                 }
-+                	
-+                 // Step forward to extract last word
-+                 glui32 word[dwin->incurs-i-1];
++                     // Step backward to find last space on input line
++                     for (i=dwin->incurs-1; i>0; i--)
++                     {
++                         // Convert to lowercase
++                         c = dwin->chars[i];
++                         if (c >= 'A' && c <= 'Z')
++                             c = c+32;
 + 
-+                 for (n=i; n<dwin->incurs; n++)
-+                     word[n-i] = dwin->chars[n];
++                         if (dwin->chars[i] == 0x20)
++                     	       break;
++                     }
++                    	
++                     // Step forward to extract last word
++                     glui32 word[dwin->incurs-i-1];
 + 
-+                 // Loop through lines of prv output
-+                 for (i=1; i<=dwin->scrollmax; i++)
-+                 {
-+                     // Step backwards through char of the line
-+                     for (n=dwin->lines[i].len; n>=0; n--)
-+                    	{
-+                         // Step forward again, break if char doesn't match word
-+                    	    for (z=0; z<=countof(word); z++)
-+                    	    {
-+                             // Convert to lowercase
-+                        	    c = dwin->lines[i].chars[n+z];
-+                        	    if (c >= 'A' && c <= 'Z')
-+                        	        c = c+32;
++                     for (n=i; n<dwin->incurs; n++)
++                         word[n-i] = dwin->chars[n];
 + 
-+                             // Compinsate for no space before first char in line
-+                             int g = (n==0) ? z+1 : z;
++                     // Loop through lines of prv output
++                     for (i=1; i<=dwin->scrollmax; i++)
++                     {
++                         // Step backwards through char of the line
++                         for (n=dwin->lines[i].len; n>=0; n--)
++                        	{
++                             // Step forward again, break if char doesn't match word
++                        	    for (z=0; z<=countof(word); z++)
++                        	    {
++                                 // Convert to lowercase
++                            	    c = dwin->lines[i].chars[n+z];
++                            	    if (c >= 'A' && c <= 'Z')
++                            	        c = c+32;
 + 
-+                        	    if (c != (char)word[g])
-+                        	        break;
-+                        		        
-+                        	    if (g == countof(word))
-+                        	        goto End;   //  Match found, break all three loops
-+                         }
-+                    	}
-+                 }
-+                 End:
-+                 
-+                 /* Call input event for each char in tab complete
-+                    i is the line, n is the first char of match, z is length of match,
-+                    so n+z is end of match and start of tab complete */
-+                 n += 1;
-+                 stc = dwin->incurs;
-+                 c = (char)dwin->lines[i].chars[n+z];
-+                 while ((c  >= 'a' && c <= 'z') || (c  >= 'A' && c <= 'Z') || (c  >= '0' && c <= '9'))
-+                 {
-+                     put_text_uni(dwin, &dwin->lines[i].chars[n+z], 1, dwin->incurs, 0);
-+                     n++;
++                                 // Compinsate for no space before first char in line
++                                 int g = (n==0) ? z+1 : z;
++ 
++                            	    if (c != (char)word[g])
++                            	        break;
++                            		        
++                            	    if (g == countof(word))
++                            	        goto End;   //  Match found, break all three loops
++                             }
++                        	}
++                     }
++                     End:
++                     
++                     /* Call input event for each char in tab complete
++                        i is the line, n is the first char of match, z is length of match,
++                        so n+z is end of match and start of tab complete */
++                     n += 1;
++                     stc = dwin->incurs;
 +                     c = (char)dwin->lines[i].chars[n+z];
++                     while ((c  >= 'a' && c <= 'z') || (c  >= 'A' && c <= 'Z') || (c  >= '0' && c <= '9'))
++                     {
++                         put_text_uni(dwin, &dwin->lines[i].chars[n+z], 1, dwin->incurs, 0);
++                         n++;
++                         c = (char)dwin->lines[i].chars[n+z];
++                     }
++                     etc = dwin->incurs;
++ 
++                     // Move curser to beginning of insert
++                     dwin->incurs = stc;
 +                 }
-+                 etc = dwin->incurs;
-+ 
-+                 // Move curser to beginning of insert
-+                 dwin->incurs = stc;
               }
-+ 
               break;
       }
-  
