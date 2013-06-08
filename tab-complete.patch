@@ -86,11 +86,11 @@ diff -cr original/garglk/wintext.c gargoyle/garglk/wintext.c
 +                                     break;
 +                            		        
 +                                 if (g == countof(word))
-+                                     goto End; // Match found, break all three loops
++                                     goto BreakTab; // Match found, break all three loops
 +                             }
 +                         }
 +                     }
-+                     End:
++                     BreakTab:
 +                     
 +                     /* Call input event for each char in tab complete
 +                        i is the line, n is the first char of match, z is length of match,

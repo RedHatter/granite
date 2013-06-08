@@ -3,18 +3,21 @@
 A set of patches to `Gargoyle` providing some additional features.
 
 ## Patches ##
+* **Search History** - *updated 06.07.2013*  
+Maps F1/F2 to search backward/forward in history using input buffer as the search term.
+
 * **Auto Complete** - *updated 06.07.2013*  
 Attempts to guess what you are typing by searching through output for last word to begin with what you have typed so far.
 Similar to *Tab Complete*.
+
+* **Click to Insert** - *updated 06.02.2013*  
+Double clicking on a word will insert it onto the end of the input line.  
+Thank you **George** from [intfiction.org](http://intfiction.org "The Interactive Fiction Community Forum") for the suggestion.
 
 * **Tab Complete** - *updated 06.07.2013*  
 Note: not compatible with *Auto Complete*.  
 Pressing tab will cause the program to search through previous story text and find the last word
 that starts with what has been typed since the last space, then fill in the rest of the word.
-
-* **Click to Insert** - *updated 06.02.2013*  
-Double clicking on a word will insert it onto the end of the input line.  
-Thank you **George** from [intfiction.org](http://intfiction.org "The Interactive Fiction Community Forum") for the suggestion.
 
 ## Install ##
 You will need to download the `gargoyle` source, apply the patches that interest you, then compile the modified source.

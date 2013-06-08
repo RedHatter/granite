@@ -1,0 +1,92 @@
+*** original/garglk/wintext.c	2013-06-07 12:11:43.308496019 -0700
+--- gargoyle/garglk/wintext.c	2013-06-07 17:36:11.946697404 -0700
+***************
+*** 1677,1682 ****
+--- 1677,1763 ----
+              put_text_uni(dwin, NULL, 0, dwin->infence, dwin->numchars - dwin->infence);
+              break;
+  
++         case keycode_Func1:
++             {
++                 len = dwin->numchars - dwin->infence;
++ 
++                 if (len < 0 || dwin->historypos == dwin->historyfirst)
++                     return;
++ 
++                 // If this is the first time searching, store line in history for future searches
++                 if (dwin->historypos == dwin->historypresent)
++                 {
++                     cx = malloc((len + 1) * 4);
++                     memcpy(cx, &(dwin->chars[dwin->infence]), len * 4);
++                     cx[len] = 0;
++                     if (dwin->history[dwin->historypos])
++                         free(dwin->history[dwin->historypos]);
++                     dwin->history[dwin->historypos] = cx;
++                 }
++ 
++                 // Recall search term (may have just stored it)
++                 glui32 *chars = dwin->history[dwin->historypresent];
++                 int nlen = strlen_uni(chars)-1;
++ 
++                 // Loop backward through history enterys
++                 int i, a;
++                 for (i=dwin->historypos-1; i>=dwin->historyfirst; i--)
++                 {
++                     // Step through chars testing agenst i history line
++                     cx = dwin->history[i];
++                     for (a=0; a <=nlen; a++)
++                     {
++                         if (cx[a] != chars[a])
++                         {
++                             break; // Break if test fails, search is not this line
++                         }
++                         else if (a == nlen) // All chars have passed successfully
++                         {
++                             dwin->historypos = i; // Record new history position
++                             put_text_uni(dwin, cx, strlen_uni(cx), dwin->infence, len); // Insert search result
++                             goto BreakFunc1;
++                         } 
++                     }
++                 }
++             }
++             BreakFunc1:
++             break;
++ 
++         case keycode_Func2:
++             {
++                 len = dwin->numchars - dwin->infence;
++ 
++                 if (len < 0 || dwin->historypos == dwin->historypresent)
++                     return;
++ 
++                 // Recall search term
++                 glui32 *chars = dwin->history[dwin->historypresent];
++                 int nlen = strlen_uni(chars)-1;
++ 
++                 // Loop forward through history enterys
++                 int i, a;
++                 for (i=dwin->historypos+1; i<=dwin->historypresent; i++)
++                 {
++                     // Step through chars testing agenst i history line
++                     cx = dwin->history[i];
++                     for (a=0; a <=nlen; a++)
++                     {
++                         if (cx[a] != chars[a])
++                         {
++                             break; // Break if test fails, search is not this line
++                         }
++                         else if (a == nlen) // All chars have passed successfully
++                         {
++                             dwin->historypos = i; // Record new history position
++                             put_text_uni(dwin, cx, strlen_uni(cx), dwin->infence, len); // Insert search result
++                             goto BreakFunc2;
++                         } 
++                     }
++                 }
++             }
++             BreakFunc2:
++             break;
++ 
+              /* Regular keys */
+  
+          case keycode_Return:
